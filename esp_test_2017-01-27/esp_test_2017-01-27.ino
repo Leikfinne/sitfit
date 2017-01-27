@@ -1,5 +1,5 @@
 #include <ESP8266WiFi.h>
-#include <WiFiUDP.h>
+#include <WiFiUdp.h>
 #include <OSCMessage.h>
 #include <Wire.h>
 
@@ -7,11 +7,15 @@ IPAddress ip(10,0,13,101);
 IPAddress gateway(10,0,13,1);
 IPAddress mask(255,255,255,0);
 
+#define I2C_SLAVE_ADDR 8
+#define NUM_SENSORS 1
+#define RECV_BUFFER_SIZE 32
+
+char osc_address[] = "/sensors"
 IPAddress server_ip(10,0,13,200);
-#define server_port 1337
+#define SERVER_PORT 1337
 
 WiFiUDP udp;
-
 
 void setup() {
   Serial.begin(115200);
@@ -34,23 +38,25 @@ void setup() {
 
 char c;
 
+int16_t sensor_values[NUM_SENSORS];
 byte received[2];
-int sensor_value;
 
 void loop() {
-  Wire.requestFrom(8, 2);
   
-  received[0] = Wire.read();
-  received[1] = Wire.read();
-  sensor_value = (received[0] << 8) | received[1];
-  Serial.print("Fikk data, ");
-  Serial.println(sensor_value);
-  OSCMessage msg("/sensor1");
-  msg.add(sensor_value);
-  msg.add(sensor_value);
-  // put your main code here, to run repeatedly:
-  udp.beginPacket(server_ip, server_port);
+  Wire.requestFrom(I2C_SLAVE_ADDR, NUM_SENSORS*2);
+  for(int i = 0; i < NUM_SENSORS && Wire.available(); ++i){
+    received[0] = Wire.read();
+    received[1] = Wire.read();
+    sensor_values[i] = (received[0] << 8) | received[1];
+  }
+
+  OSCMessage msg(osc_address);
+  for(int i = 0; i < NUM_SENSORS; ++i){
+      msg.add(sensor_values[i]);
+  }
+  udp.beginPacket(server_ip, SERVER_PORT);
   msg.send(udp);
   udp.endPacket();
+  
   delay(10);
 }
