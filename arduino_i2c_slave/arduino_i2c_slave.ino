@@ -32,7 +32,7 @@ void requestEvent() {
   // correct value
   
   // Sends the array over I2C
-  send_int16_ts(sensor_values, 1);
+  send_int16_ts(sensor_values, NUM_SENSORS);
 }
 
 /**
