@@ -1,7 +1,12 @@
 #include <Wire.h>
 
+// TODO: Set correct values for these constants
+// I2C_ADDRESS can be left at 8 for single-slave setups
 #define I2C_ADDRESS 8
+// Can be left at 32 unless running out of memory
+// Increasing above 32 causes no effect; 32 is the size of Wire's buffers
 #define SEND_BUFFER_SIZE 32
+// Should be set to the number of sensor values being sent
 #define NUM_SENSORS 1
 
 int16_t sensor_values[NUM_SENSORS];
@@ -23,6 +28,9 @@ void loop() {
 void requestEvent() {
   // Updates sensor value array
   sensor_values[0] = analogRead(A0);
+  // TODO: Update all sensor values. Remember to set NUM_SENSOR to
+  // correct value
+  
   // Sends the array over I2C
   send_int16_ts(sensor_values, 1);
 }
